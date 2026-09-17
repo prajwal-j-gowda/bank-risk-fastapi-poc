@@ -13,6 +13,8 @@ REGISTERED_COMPANIES = [
     "wonka industries",
     "oscorp",
     "globex",
+    "sbi",
+    "northbridge"
 ]
 
 
