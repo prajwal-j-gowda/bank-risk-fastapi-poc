@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: bank-risk-poc
+    runtime: docker
+    plan: free
+    healthCheckPath: /docs
