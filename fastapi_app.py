@@ -36,6 +36,7 @@ class RegistryResponse(BaseModel):
 # Hardcoded mock database of 5 companies
 MOCK_REGISTRY = {
     "01234567": {
+        "registrationNumber": "01234567", # <-- Added missing field
         "legalName": "ACME GLOBAL SOLUTIONS LTD",
         "jurisdiction": "GB",
         "entityType": "PRIVATE_LIMITED_COMPANY",
@@ -45,6 +46,7 @@ MOCK_REGISTRY = {
         "registeredAddress": {"line1": "123 Innovation Drive", "city": "London", "postalCode": "E1 6AN", "country": "GB"}
     },
     "11223344": {
+        "registrationNumber": "11223344", # <-- Added missing field
         "legalName": "STARK INDUSTRIES LLC",
         "jurisdiction": "US-DE",
         "entityType": "LLC",
@@ -54,6 +56,7 @@ MOCK_REGISTRY = {
         "registeredAddress": {"line1": "10880 Malibu Point", "city": "Malibu", "postalCode": "90265", "country": "US"}
     },
     "99887766": {
+        "registrationNumber": "99887766", # <-- Added missing field
         "legalName": "WAYNE ENTERPRISES INC",
         "jurisdiction": "US-NY",
         "entityType": "CORPORATION",
@@ -63,6 +66,7 @@ MOCK_REGISTRY = {
         "registeredAddress": {"line1": "1007 Mountain Drive", "city": "Gotham", "postalCode": "10001", "country": "US"}
     },
     "44556677": {
+        "registrationNumber": "44556677", # <-- Added missing field
         "legalName": "INITECH CORP",
         "jurisdiction": "US-TX",
         "entityType": "CORPORATION",
@@ -72,6 +76,7 @@ MOCK_REGISTRY = {
         "registeredAddress": {"line1": "4120 Freidrich Lane", "city": "Austin", "postalCode": "78744", "country": "US"}
     },
     "55667788": {
+        "registrationNumber": "55667788", # <-- Added missing field
         "legalName": "GLOBEX CORPORATION",
         "jurisdiction": "CY",
         "entityType": "PRIVATE_LIMITED_COMPANY",
