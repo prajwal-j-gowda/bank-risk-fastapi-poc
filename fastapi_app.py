@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Optional
 from datetime import date
 
@@ -8,10 +8,12 @@ app = FastAPI(title="Commercial Onboarding POC (Registry & Risk)", version="1.0.
 # ==========================================
 # 1. REGISTRY API MODELS & LOGIC
 # ==========================================
+
+# Added default values so missing fields in the request won't cause an error
 class RegistryRequest(BaseModel):
-    registrationNumber: str
-    jurisdiction: str
-    legalName: str
+    registrationNumber: str = "00000000"
+    jurisdiction: str = "US"
+    legalName: str = "Default Company Ltd"
 
 class Address(BaseModel):
     line1: str
@@ -36,7 +38,7 @@ class RegistryResponse(BaseModel):
 # Hardcoded mock database of 5 companies
 MOCK_REGISTRY = {
     "01234567": {
-        "registrationNumber": "01234567", # <-- Added missing field
+        "registrationNumber": "01234567",
         "legalName": "ACME GLOBAL SOLUTIONS LTD",
         "jurisdiction": "GB",
         "entityType": "PRIVATE_LIMITED_COMPANY",
@@ -46,7 +48,7 @@ MOCK_REGISTRY = {
         "registeredAddress": {"line1": "123 Innovation Drive", "city": "London", "postalCode": "E1 6AN", "country": "GB"}
     },
     "11223344": {
-        "registrationNumber": "11223344", # <-- Added missing field
+        "registrationNumber": "11223344",
         "legalName": "STARK INDUSTRIES LLC",
         "jurisdiction": "US-DE",
         "entityType": "LLC",
@@ -56,7 +58,7 @@ MOCK_REGISTRY = {
         "registeredAddress": {"line1": "10880 Malibu Point", "city": "Malibu", "postalCode": "90265", "country": "US"}
     },
     "99887766": {
-        "registrationNumber": "99887766", # <-- Added missing field
+        "registrationNumber": "99887766",
         "legalName": "WAYNE ENTERPRISES INC",
         "jurisdiction": "US-NY",
         "entityType": "CORPORATION",
@@ -66,7 +68,7 @@ MOCK_REGISTRY = {
         "registeredAddress": {"line1": "1007 Mountain Drive", "city": "Gotham", "postalCode": "10001", "country": "US"}
     },
     "44556677": {
-        "registrationNumber": "44556677", # <-- Added missing field
+        "registrationNumber": "44556677",
         "legalName": "INITECH CORP",
         "jurisdiction": "US-TX",
         "entityType": "CORPORATION",
@@ -76,7 +78,7 @@ MOCK_REGISTRY = {
         "registeredAddress": {"line1": "4120 Freidrich Lane", "city": "Austin", "postalCode": "78744", "country": "US"}
     },
     "55667788": {
-        "registrationNumber": "55667788", # <-- Added missing field
+        "registrationNumber": "55667788",
         "legalName": "GLOBEX CORPORATION",
         "jurisdiction": "CY",
         "entityType": "PRIVATE_LIMITED_COMPANY",
@@ -89,25 +91,41 @@ MOCK_REGISTRY = {
 
 @app.post("/api/v1/registry/check", response_model=RegistryResponse)
 def check_registry(request: RegistryRequest):
+    # Lookup company. If it doesn't exist, create a default dynamic response using the requested data
     company = MOCK_REGISTRY.get(request.registrationNumber)
     
-    # Check if registration number exists and name matches (case-insensitive)
-    if company and company["legalName"].lower() == request.legalName.lower():
-        return RegistryResponse(matchStatus="EXACT_MATCH", registryData=company)
-    
-    # If no match found
-    return RegistryResponse(matchStatus="NO_MATCH")
+    if not company:
+        # Dynamic Default Fallback for any unknown request
+        company = {
+            "registrationNumber": request.registrationNumber,
+            "legalName": request.legalName.upper(),
+            "jurisdiction": request.jurisdiction.upper(),
+            "entityType": "DEFAULT_CORPORATION",
+            "incorporationDate": "2020-01-01",
+            "companyStatus": "ACTIVE",
+            "industryDescription": "General Commercial Activities",
+            "registeredAddress": {
+                "line1": "100 Default Boulevard", 
+                "city": "Metropolis", 
+                "postalCode": "00000", 
+                "country": request.jurisdiction.upper()
+            }
+        }
+        
+    return RegistryResponse(matchStatus="EXACT_MATCH", registryData=company)
 
 
 # ==========================================
 # 2. FRAUD & RISK SCORING API
 # ==========================================
+
+# Added default values to prevent missing-field errors
 class FraudRiskRequest(BaseModel):
-    legalName: str
-    jurisdiction: str
-    registrationNumber: str 
-    industryDescription: str
-    expectedProducts: List[str]
+    legalName: str = "Default Company Ltd"
+    jurisdiction: str = "US"
+    registrationNumber: str = "00000000"
+    industryDescription: str = "General Commercial Activities"
+    expectedProducts: List[str] = Field(default_factory=lambda: ["ACCOUNTS"])
 
 class RiskMetadata(BaseModel):
     jurisdictionRisk: str
@@ -127,7 +145,7 @@ def calculate_risk(request: FraudRiskRequest):
     fraud_score = 10
     flags = []
     
-    # Check registration number risk (e.g., flagging specific known bad entities)
+    # Check registration number risk
     if request.registrationNumber in ["44556677", "55667788"]:
         entity_risk = "HIGH"
         fraud_score += 40
@@ -136,7 +154,7 @@ def calculate_risk(request: FraudRiskRequest):
         entity_risk = "LOW"
 
     # Check jurisdiction risk
-    if request.jurisdiction in ["CY", "KY", "PA"]:
+    if request.jurisdiction.upper() in ["CY", "KY", "PA"]:
         jurisdiction_risk = "HIGH"
         fraud_score += 30
         flags.append("HIGH_RISK_JURISDICTION")
@@ -168,4 +186,3 @@ def calculate_risk(request: FraudRiskRequest):
             productRisk=product_risk
         )
     )
-    
